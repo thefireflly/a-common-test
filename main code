@@ -1,0 +1,39 @@
+import cv2
+import numpy as np
+
+
+Video = cv2.VideoCapture('1红方标准曝光~1.mp4')
+success, frame1 = Video.read()
+cv2.imshow('img', frame1)
+cv2.waitKey()
+cv2.destroyAllWindows()
+
+kernel = np.ones((5,5), np.uint8)
+
+def fill_color_demo(image):
+
+    h, w = image.shape[:2]
+    mask = np.zeros([h+2, w+2], np.uint8)
+    cv2.floodFill(image, mask, (0, 0), 255)
+
+
+
+while success and Video.isOpened():
+    frame = cv2.cvtColor(frame1, cv2.COLOR_BGR2GRAY)
+    ret, frame = cv2.threshold(frame, 220,255,cv2.THRESH_BINARY)
+    frame = cv2.morphologyEx(frame, cv2.MORPH_OPEN, kernel=kernel)
+    frame = cv2.morphologyEx(frame, cv2.MORPH_CLOSE, kernel=kernel)
+    fill_color_demo(frame)
+    frame = cv2.bitwise_not(frame)
+    contours, hierarchy = cv2.findContours(frame, cv2.RETR_TREE, cv2.CHAIN_APPROX_NONE)
+    for i,j in enumerate(contours):
+        j = cv2.arcLength(j, True)
+        if 100 < j < 400:
+            cv2.drawContours(frame1, contours, i, (255, 0, 0), 3)
+
+    cv2.imshow('img',frame1)
+
+    success, frame1 = Video.read()
+    cv2.waitKey(3)
+    if cv2.waitKey(10) & 0xFF == 27:
+        break
